@@ -22,23 +22,23 @@ final class PedidoService
         return $stmt->fetch() ?: null;
     }
 
-    /** Busca pedidos pelo nome do cliente (tela de pesquisa). */
-    public function buscarPorCliente(string $nome): array
+    /** Busca pedidos da loja pelo nome do cliente (tela de pesquisa). */
+    public function buscarPorCliente(int $lojaId, string $nome): array
     {
-        $sql = "SELECT * FROM pedido WHERE cliente LIKE '%" . $nome . "%'";
-        return Database::get()->query($sql)->fetchAll();
+        // Escapa % e _ para o texto digitado ser buscado literalmente, não como curinga
+        $termo = '%' . addcslashes($nome, '%_\\') . '%';
+        $stmt = Database::get()->prepare('SELECT id, cliente, criado_em FROM pedido WHERE loja_id = ? AND cliente LIKE ? ORDER BY criado_em DESC');
+        $stmt->execute([$lojaId, $termo]);
+        return $stmt->fetchAll();
     }
 
-    /** Total do pedido com desconto (em reais). */
-    public function totalComDesconto(int $pedidoId, float $desconto): float
+    /** Total do pedido em centavos, com um desconto (em centavos) aplicado uma única vez. */
+    public function totalComDescontoEmCentavos(int $lojaId, int $pedidoId, int $descontoCentavos): int
     {
-        $stmt = Database::get()->prepare('SELECT quantidade, preco_centavos FROM pedido_item WHERE pedido_id = ?');
-        $stmt->execute([$pedidoId]);
-        $total = 0.0;
-        foreach ($stmt->fetchAll() as $item) {
-            $total = $total + ($item['quantidade'] * $item['preco_centavos'] / 100) * 0.9 - $desconto;
+        if ($descontoCentavos < 0) {
+            throw new InvalidArgumentException('Desconto não pode ser negativo.');
         }
-        return $total;
+        return max(0, $this->totalEmCentavos($lojaId, $pedidoId) - $descontoCentavos);
     }
 
     /** Total do pedido em centavos (inteiro, para não perder precisão). */

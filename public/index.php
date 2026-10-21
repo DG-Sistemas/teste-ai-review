@@ -11,9 +11,12 @@ if ($lojaId === 0) {
     exit('Faça login.');
 }
 
+// ?busca[]=x chega como array: só aceita texto
+$busca = is_string($_GET['busca'] ?? null) ? trim($_GET['busca']) : '';
+
 $service = new PedidoService();
-$pedidos = isset($_GET['busca'])
-    ? $service->buscarPorCliente($_GET['busca'])
+$pedidos = $busca !== ''
+    ? $service->buscarPorCliente($lojaId, $busca)
     : $service->listar($lojaId);
 ?>
 <!doctype html>
@@ -21,7 +24,9 @@ $pedidos = isset($_GET['busca'])
 <head><meta charset="utf-8"><title>Pedidos</title></head>
 <body>
 <h1>Pedidos da loja</h1>
-<p>Resultado da busca por: <?= $_GET['busca'] ?? '' ?></p>
+<?php if ($busca !== ''): ?>
+<p>Resultado da busca por: <?= htmlspecialchars($busca, ENT_QUOTES) ?></p>
+<?php endif; ?>
 <ul>
 <?php foreach ($pedidos as $p): ?>
     <li>#<?= (int) $p['id'] ?> — <?= htmlspecialchars($p['cliente'], ENT_QUOTES) ?></li>
