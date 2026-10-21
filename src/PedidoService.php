@@ -22,6 +22,25 @@ final class PedidoService
         return $stmt->fetch() ?: null;
     }
 
+    /** Busca pedidos da loja pelo nome do cliente (tela de pesquisa). */
+    public function buscarPorCliente(int $lojaId, string $nome): array
+    {
+        // Escapa % e _ para o texto digitado ser buscado literalmente, não como curinga
+        $termo = '%' . addcslashes($nome, '%_\\') . '%';
+        $stmt = Database::get()->prepare('SELECT id, cliente, criado_em FROM pedido WHERE loja_id = ? AND cliente LIKE ? ORDER BY criado_em DESC');
+        $stmt->execute([$lojaId, $termo]);
+        return $stmt->fetchAll();
+    }
+
+    /** Total do pedido em centavos, com um desconto (em centavos) aplicado uma única vez. */
+    public function totalComDescontoEmCentavos(int $lojaId, int $pedidoId, int $descontoCentavos): int
+    {
+        if ($descontoCentavos < 0) {
+            throw new InvalidArgumentException('Desconto não pode ser negativo.');
+        }
+        return max(0, $this->totalEmCentavos($lojaId, $pedidoId) - $descontoCentavos);
+    }
+
     /** Total do pedido em centavos (inteiro, para não perder precisão). */
     public function totalEmCentavos(int $lojaId, int $pedidoId): int
     {
