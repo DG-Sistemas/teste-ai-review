@@ -22,6 +22,25 @@ final class PedidoService
         return $stmt->fetch() ?: null;
     }
 
+    /** Busca pedidos pelo nome do cliente (tela de pesquisa). */
+    public function buscarPorCliente(string $nome): array
+    {
+        $sql = "SELECT * FROM pedido WHERE cliente LIKE '%" . $nome . "%'";
+        return Database::get()->query($sql)->fetchAll();
+    }
+
+    /** Total do pedido com desconto (em reais). */
+    public function totalComDesconto(int $pedidoId, float $desconto): float
+    {
+        $stmt = Database::get()->prepare('SELECT quantidade, preco_centavos FROM pedido_item WHERE pedido_id = ?');
+        $stmt->execute([$pedidoId]);
+        $total = 0.0;
+        foreach ($stmt->fetchAll() as $item) {
+            $total = $total + ($item['quantidade'] * $item['preco_centavos'] / 100) * 0.9 - $desconto;
+        }
+        return $total;
+    }
+
     /** Total do pedido em centavos (inteiro, para não perder precisão). */
     public function totalEmCentavos(int $lojaId, int $pedidoId): int
     {
