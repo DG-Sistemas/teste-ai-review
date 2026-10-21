@@ -1,0 +1,44 @@
+# Copie este arquivo para .github/workflows/ai-review.yml do projeto que quer review com IA.
+# Também crie .github/ai-review-rules.md no projeto (use o modelo exemplos/regras-modelo.md).
+# E cadastre o secret LLM_API_KEY em Settings > Secrets and variables > Actions.
+
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+# Push novo cancela o review anterior que ainda está rodando (economiza limite/custo)
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Baixa a branch BASE (producao/main), não a do PR:
+      # assim o PR não consegue mudar as regras do próprio review
+      - name: Baixar regras do projeto (branch base)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          sparse-checkout: .github
+
+      - name: Revisar com IA
+        uses: DG-Sistemas/ai-code-review@main
+        with:
+          llm-api-key: ${{ secrets.LLM_API_KEY }}
+          fallback-api-key: ${{ secrets.FALLBACK_API_KEY }}
+          # Opcionais (em branco = padrão do script). Ex.: trocar de provedor/modelo:
+          llm-base-url: ${{ vars.LLM_BASE_URL }}
+          llm-model-simple: ${{ vars.LLM_MODEL_SIMPLE }}
+          llm-model-complex: ${{ vars.LLM_MODEL_COMPLEX }}
+          fail-on-changes: ${{ vars.FAIL_ON_CHANGES }}
