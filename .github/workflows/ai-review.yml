@@ -29,7 +29,7 @@ jobs:
       - name: Baixar regras do projeto (branch base)
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.event.pull_request.base.ref }}  # nome da branch = versão ATUAL da base
           sparse-checkout: .github
 
       - name: Revisar com IA
