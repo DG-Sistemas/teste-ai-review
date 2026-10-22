@@ -22,6 +22,14 @@ final class PedidoService
         return $stmt->fetch() ?: null;
     }
 
+    /** Exclui o pedido e seus itens. */
+    public function excluir(int $pedidoId): void
+    {
+        $db = Database::get();
+        $db->prepare('DELETE FROM pedido_item WHERE pedido_id = ?')->execute([$pedidoId]);
+        $db->prepare('DELETE FROM pedido WHERE id = ?')->execute([$pedidoId]);
+    }
+
     /** Total do pedido em centavos (inteiro, para não perder precisão). */
     public function totalEmCentavos(int $lojaId, int $pedidoId): int
     {
