@@ -33,7 +33,7 @@ jobs:
           sparse-checkout: .github
 
       - name: Revisar com IA
-        uses: DG-Sistemas/ai-code-review@main
+        uses: ./.github/actions/ai-review
         with:
           llm-api-key: ${{ secrets.LLM_API_KEY }}
           fallback-api-key: ${{ secrets.FALLBACK_API_KEY }}

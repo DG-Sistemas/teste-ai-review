@@ -1,0 +1,86 @@
+# CÓPIA da action do agente de code review com IA (o repositório original é privado).
+# Repositório público não pode usar action de repositório privado, por isso a cópia.
+# Para atualizar: copie de novo action.yml e scripts/ai-review.mjs do repositório original.
+
+name: AI Code Review
+description: Revisa o diff do PR com uma IA (qualquer API compatível com OpenAI) e comenta no PR
+
+inputs:
+  llm-api-key:
+    description: Chave da IA principal (obrigatória)
+    required: true
+  llm-base-url:
+    description: URL da API (padrão Groq)
+    required: false
+    default: ""
+  llm-model-simple:
+    description: Modelo para PR simples
+    required: false
+    default: ""
+  llm-model-complex:
+    description: Modelo para PR complexo
+    required: false
+    default: ""
+  fallback-api-key:
+    description: Chave da IA reserva (opcional)
+    required: false
+    default: ""
+  fallback-base-url:
+    description: URL da API reserva (padrão Cerebras)
+    required: false
+    default: ""
+  fallback-model:
+    description: Modelo da reserva
+    required: false
+    default: ""
+  rules-file:
+    description: Arquivo de regras do projeto, relativo à raiz do repositório
+    required: false
+    default: .github/ai-review-rules.md
+  complex-lines:
+    description: A partir de quantas linhas o PR vira complexo
+    required: false
+    default: ""
+  critical-paths:
+    description: Regex de caminhos críticos (sempre pedem olho humano)
+    required: false
+    default: ""
+  llm-prices:
+    description: 'Preço por modelo em US$ por 1M tokens, JSON: {"modelo": [entrada, saida]}'
+    required: false
+    default: ""
+  fail-on-changes:
+    description: "true = check fica vermelho quando a IA pede mudanças"
+    required: false
+    default: ""
+  github-token:
+    description: Token para ler o PR e comentar
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Preparar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Rodar o agente de review
+      shell: bash
+      run: node "${{ github.action_path }}/scripts/ai-review.mjs"
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        LLM_API_KEY: ${{ inputs.llm-api-key }}
+        LLM_BASE_URL: ${{ inputs.llm-base-url }}
+        LLM_MODEL_SIMPLE: ${{ inputs.llm-model-simple }}
+        LLM_MODEL_COMPLEX: ${{ inputs.llm-model-complex }}
+        FALLBACK_API_KEY: ${{ inputs.fallback-api-key }}
+        FALLBACK_BASE_URL: ${{ inputs.fallback-base-url }}
+        FALLBACK_MODEL: ${{ inputs.fallback-model }}
+        RULES_FILE: ${{ inputs.rules-file }}
+        COMPLEX_LINES: ${{ inputs.complex-lines }}
+        CRITICAL_PATHS: ${{ inputs.critical-paths }}
+        LLM_PRICES: ${{ inputs.llm-prices }}
+        FAIL_ON_CHANGES: ${{ inputs.fail-on-changes }}

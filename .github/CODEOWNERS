@@ -1,0 +1,16 @@
+# Quem precisa revisar cada área crítica.
+# Quando um PR mexe num destes caminhos, o GitHub pede revisão do dono automaticamente
+# (nunca do próprio autor do PR). Combine com a proteção de branch
+# "Require review from Code Owners" para o merge esperar essa aprovação.
+#
+# Formato: <caminho>  <@usuario ou @organizacao/time>
+# A última regra que bater com o arquivo é a que vale.
+
+# Regras de pedido: cálculo de valores e isolamento entre lojas
+/src/PedidoService.php    @donovansistemas
+
+# Login, sessão e permissões
+/public/                  @donovansistemas
+
+# O próprio revisor (workflow, action e regras da IA)
+/.github/                 @donovansistemas
